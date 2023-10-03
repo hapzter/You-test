@@ -44,6 +44,13 @@ docker ps --format '{{.Image}} --->>> {{.Names}}' | grep socat
 docker inspect   -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' heuristic_ganguly
 ```
 ->>> 172.18.0.3
+# Jenkins agent image with dotnet7-sdk and dotnet7-runtime
+I created a new docker image from docker hub jenkins/agent, but with dotnet sdk and runtime.
+```
+FROM jenkins/agent:alpine-jdk17
+USER root
+RUN  apk update && apk add dotnet7-sdk dotnet7-runtime
+```
 # At this point it is possible to configure Docker Cloud at Jenkins
 Docker Host URI:
 ```
@@ -51,7 +58,7 @@ tcp://172.18.0.3:2375
 ```
 Docker Image
 ```
-jenkins/agent:alpine-jdk11
+dzhap/myjenkins-agent:dotnet
 ```
 Remote File System Root
 ```
