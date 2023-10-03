@@ -58,7 +58,7 @@ tcp://172.18.0.3:2375
 ```
 Docker Image
 ```
-dzhap/myjenkins-agent:dotnet
+dzhap/myjenkins-agent:dotnet7
 ```
 Remote File System Root
 ```
