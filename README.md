@@ -66,5 +66,5 @@ Remote File System Root
 ```
 Instance Capacity
 ```
-3
+4
 ```
