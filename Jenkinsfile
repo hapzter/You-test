@@ -1,99 +1,100 @@
-def spare_checkout() {
-    checkout([$class: 'GitSCM', 
-        branches: [[name: '*/${branch}']],
-            extensions: [
-                [$class: 'SparseCheckoutPaths', 
-                sparseCheckoutPaths:[[$class:'SparseCheckoutPath', path:'/csharp/unit-testing']]]
-                ],
-            userRemoteConfigs: [[url: 'https://github.com/dotnet/samples.git']]])
-}
-
-pipeline {    
-    agent {   
-        node {
-            label 'docker-agent-dotnet'
-            }
-      }               
-                               
+pipeline {
+    agent {
+    	label 'docker-agent-dotnet'
+    }
+    parameters {
+        string(name: 'url', defaultValue: 'https://github.com/dotnet/samples.git', description: 'Sources to build and test')
+        string(name: 'branch', defaultValue: 'main', description: 'Set to coresponding branch')
+        booleanParam(name: 'publish', defaultValue: false, description: 'Set to true to run publish stage')
+    }
+    options {
+        skipDefaultCheckout(true)
+    }
     stages {
-        stage('Build') {
+        stage('DotNet build') {
             steps {
-                spare_checkout()
-                sh'''
-                cd csharp/unit-testing
-                dotnet build UnitTesting.sln
-                '''
-            }       
-        }       
-        stage('Run parallel Tests') {
-            parallel {
-                stage('MSTest') {
-                    agent {
-                        node {
-                            label 'docker-agent-dotnet'
-                        }
-                    }
-                    steps {
-                        spare_checkout()
-                        sh'''
-                        cd csharp/unit-testing
-                        dotnet test --logger "trx;LogFileName=unit_test.trx" \
-                            MSTest.Project/MSTest.Project.csproj
-                        '''
-                    }
-                    post {
-                        always {
-                            mstest testResultsFile:"**/*.trx", keepLongStdio: true
-                        }
-                    }
-                }
-                stage('NUnit') {
-                    agent {
-                        node {
-                            label 'docker-agent-dotnet'
-                        }
-                    }
-                    steps {
-                        spare_checkout()
-                        sh'''
-                        cd csharp/unit-testing
-                        dotnet test --logger "trx;LogFileName=unit_test.trx" \
-                            NUnit.TestProject/NUnit.Project.csproj
-                        '''
-                    }
-                    post {
-                        always {
-                            mstest testResultsFile:"**/*.trx", keepLongStdio: true
-                        }
-                    }
-                }
-                stage('XUnit') {
-                    agent {
-                        node {
-                            label 'docker-agent-dotnet'
-                        }
-                    }
-                    steps {
-                        spare_checkout()
-                        sh'''
-                        cd csharp/unit-testing
-                        dotnet test --logger "trx;LogFileName=unit_test.trx" \
-                            XUnit.TestProject/XUnit.Project.csproj
-                        '''}
-                    post {
-                        always {
-                            mstest testResultsFile:"**/*.trx", keepLongStdio: true
-                        }
-                    }
-                }
-            }    
-        }       
-        stage('Publish') {
-                steps {
-                        echo "Publishing... if any"
-                }        
+                cleanWs()
+                checkout(
+                    [$class: 'GitSCM',
+                    branches: [[name: params.branch]],
+                    userRemoteConfigs: [[url: params.url]]]
+                )
+                dotnetBuild project: 'csharp/unit-testing/UnitTesting.sln'
+            }
         }
-    }                 
-}                        spare_checkout()
+        stage('DotNet Unit tests') {
+            parallel {
+                stage('MSUnit tests') {
+                    steps {
+			            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+			                dir("csharp/unit-testing/MSTest.Project/") {
+                                dotnetTest(
+                                    logger: 'trx;LogFileName=msunit_test.trx', 
+                                    noBuild: true, 
+                                    project: 'MSTest.Project.csproj'
+                                )
+                            }
+                        }
+                    }
+                }
+                stage('NUnit tests') {
+                    steps {
+                        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+		                    dir("csharp/unit-testing/NUnit.TestProject/") {
+                                dotnetTest(
+                                    logger: 'trx;LogFileName=nunit_test.trx', 
+                                    noBuild: true, 
+                                    project: 'NUnit.Project.csproj'
+                                )
+                            }
+                        }
+                    }
+                }
 
-
+		        stage('XUnit tests') {
+		            steps {
+		                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+		                    dir("csharp/unit-testing/XUnit.TestProject/") {
+                                dotnetTest(
+                                    logger: 'trx;LogFileName=xunit_test.trx', 
+                                    noBuild: true, 
+                                    project: 'XUnit.Project.csproj'
+                                )
+                            }
+                        }
+                    }
+ 		        }
+	        }
+        }
+	    stage('Publish Test Results') {
+	        steps {
+                mstest testResultsFile:"**/*.trx", keepLongStdio: true
+            }
+        }
+        stage('DotNet Publish') {
+            when {
+                anyOf {
+                    expression { params.publish == true }
+                    expression { currentBuild.currentResult == 'SUCCESS'}
+                }
+            }
+            steps {
+                dir("csharp/unit-testing/"){
+                    dotnetPublish(
+                        noBuild: true,
+                        outputDirectory: 'pub', 
+                        project: 'UnitTesting.sln', 
+                        selfContained: false
+                    )
+                    zip zipFile: 'UnitTesting.zip', archive: true, dir: 'pub'
+                    archiveArtifacts artifacts: 'UnitTesting.zip', fingerprint: true
+                }
+            }
+        }
+    }
+    post {
+        always {
+            echo "Build status is ${currentBuild.currentResult}"
+        }
+    }
+}
