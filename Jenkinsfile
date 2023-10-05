@@ -24,8 +24,8 @@ pipeline {
             parallel {
                 stage('MSUnit tests') {
                     steps {
-			            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-			                dir("csharp/unit-testing/MSTest.Project/") {
+                        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                            dir("csharp/unit-testing/MSTest.Project/") {
                                 dotnetTest(
                                     logger: 'trx;LogFileName=msunit_test.trx', 
                                     noBuild: true, 
@@ -38,7 +38,7 @@ pipeline {
                 stage('NUnit tests') {
                     steps {
                         catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-		                    dir("csharp/unit-testing/NUnit.TestProject/") {
+                            dir("csharp/unit-testing/NUnit.TestProject/") {
                                 dotnetTest(
                                     logger: 'trx;LogFileName=nunit_test.trx', 
                                     noBuild: true, 
@@ -48,11 +48,10 @@ pipeline {
                         }
                     }
                 }
-
-		        stage('XUnit tests') {
-		            steps {
-		                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-		                    dir("csharp/unit-testing/XUnit.TestProject/") {
+                stage('XUnit tests') {
+                    steps {
+                        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                            dir("csharp/unit-testing/XUnit.TestProject/") {
                                 dotnetTest(
                                     logger: 'trx;LogFileName=xunit_test.trx', 
                                     noBuild: true, 
@@ -61,11 +60,11 @@ pipeline {
                             }
                         }
                     }
- 		        }
-	        }
+                }
+            }
         }
-	    stage('Publish Test Results') {
-	        steps {
+        stage('Publish Test Results') {
+            steps {
                 mstest testResultsFile:"**/*.trx", keepLongStdio: true
             }
         }
