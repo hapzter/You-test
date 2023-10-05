@@ -1,4 +1,14 @@
 # Yousician-test
+Mission: build some test project
+Interest: obtain some new skils, like Jenkins and local Docker Cloud setup. As well as learn more about the Pipeline
+Time spend: ~4h for learning and ~9h for the entire preparation and implementation of the Pipeline
+Challenges: this is a tupical BE day, however the bigest challenge for me was the Jenkins itself and its Declerative Pipeline
+
+Additional Jenkins plugins: blueocean docker-workflow docker-plugin dotnet-sdk mstest pipeline-utility-steps
+
+In terms of 'extra miles', I do prefer to have an agent with all dependencies installed, so I can manage only provisioning configs and save some time in future.
+
+# Environment setup
 # Build Jenkins dotnet image
 ```
 docker build -t jenkins-dotnet:2.414.2 .
