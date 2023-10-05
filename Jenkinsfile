@@ -1,7 +1,5 @@
 pipeline {
-    agent {
-    	label 'docker-agent-dotnet'
-    }
+    agent any
     parameters {
         string(name: 'url', defaultValue: 'https://github.com/dotnet/samples.git', description: 'Sources to build and test')
         string(name: 'branch', defaultValue: 'main', description: 'Set to coresponding branch')
