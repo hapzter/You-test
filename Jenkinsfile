@@ -90,9 +90,4 @@ pipeline {
             }
         }
     }
-    post {
-        always {
-            echo "Build status is ${currentBuild.currentResult}"
-        }
-    }
 }
