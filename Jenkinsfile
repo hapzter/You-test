@@ -1,17 +1,15 @@
 pipeline {
-    agent { label 'master' }
+    agent any
     
     options {
-        buildDiscarder(logRotator(daysToKeepStr: '14', artifactDaysToKeepStr: '14'))
-        disableConcurrentBuilds()
         timeout(time: 1, unit: 'HOURS')
     }
 
     stages {
-        stage('Deploy Garage UI') {
+        stage('Deploy') {
             steps {
                 script {
-
+                    echo 'environment'
                     sh 'printenv'
                 }
             }
