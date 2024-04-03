@@ -9,7 +9,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    echo 'environment'
+                    echo 'environment org-test'
                     sh 'printenv'
                 }
             }
