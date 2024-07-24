@@ -9,7 +9,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    echo 'environment org-test '
+                    echo 'environment multibranch merge'
                     sh 'printenv'
                 }
             }
