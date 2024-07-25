@@ -9,10 +9,11 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    def triggerCauses = currentBuild.rawBuild.getCauses()
-                    def triggeredByUpstream = triggerCauses.any { it.toString().contains("BuildUpstreamCause")}
-                    if  (triggeredByUpstream) { echo 'triggered by Upstream project' }
-                    if  (!triggeredByUpstream) { echo 're-deploy staging' }
+                    def upstreamCause = currentBuild.rawBuild.getCause(hudson.model.Cause$UpstreamCause)
+                    if  (upstreamCause) { 
+                        echo "triggered by Upstream project: ${upstreamCause.getUpstreamProject()}"
+                    }
+                    if  (!upstreamCause) { echo 're-deploy staging' }
                     echo 'environment multibranch merge'
                     sh 'printenv'
                 }
