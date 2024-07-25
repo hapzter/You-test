@@ -10,8 +10,9 @@ pipeline {
             steps {
                 script {
                     def triggerCauses = currentBuild.rawBuild.getCauses()
-                    def triggeredBy = triggerCauses.any { it.toString().contains("BuildUpstreamCause")}
-                    echo 'triggered by: ' + triggeredBy
+                    def triggeredByUpstream = triggerCauses.any { it.toString().contains("BuildUpstreamCause")}
+                    if  triggeredByUpstream { echo 'triggered by Upstream project' }
+                    if  !triggeredByUpstream { echo 're-deploy staging' }
                     echo 'environment multibranch merge'
                     sh 'printenv'
                 }
