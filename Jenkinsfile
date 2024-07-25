@@ -9,6 +9,9 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
+                    def triggerCauses = currentBuild.rawBuild.getCauses()
+                    def triggeredBy = triggerCauses.any { it.toString() }
+                    echo 'triggered by: ' + triggeredBy
                     echo 'environment multibranch merge'
                     sh 'printenv'
                 }
